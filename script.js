@@ -89,3 +89,17 @@ setInterval(fetchFlights, 120000);
 
 // switch board
 setInterval(switchBoard, 20000);
+
+function updateClock() {
+  const now = new Date();
+  const time = now.toLocaleTimeString("it-IT", {
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+
+  const el = document.getElementById("liveClock");
+  if (el) el.innerText = `LOCAL TIME: ${time}`;
+}
+
+setInterval(updateClock, 1000);
+updateClock();
