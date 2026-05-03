@@ -1,6 +1,7 @@
 const API_KEY = "b59f0c36027454ecc59c3915c56a4188";
 
-const ENDPOINT = `https://api.aviationstack.com/v1/flights?access_key=${API_KEY}&dep_iata=LIN&limit=10`;
+const ENDPOINT =
+  `https://api.aviationstack.com/v1/flights?access_key=${API_KEY}&dep_iata=LIN&limit=15`;
 
 let showingDepartures = true;
 
@@ -9,20 +10,31 @@ async function fetchFlights() {
     const res = await fetch(ENDPOINT);
     const data = await res.json();
 
-    const flights = data.data || [];
+    const flights = (data.data || []).slice(0, 8);
 
-    const departures = flights.map(f => ({
-      time: f.departure?.scheduled?.substring(11, 16) || "--:--",
-      flight: f.flight?.iata || "N/A",
-      city: f.arrival?.airport || "Unknown",
-      status: f.flight_status?.toUpperCase() || "UNKNOWN"
-    }));
+    const mapped = flights.map(f => {
+      const status = (f.flight_status || "unknown").toLowerCase();
 
-    renderTable(departures);
+      return {
+        time: f.departure?.scheduled?.substring(11, 16) || "--:--",
+        flight: f.flight?.iata || "N/A",
+        city: f.arrival?.airport || "Unknown",
+        status: status
+      };
+    });
+
+    renderTable(mapped);
   } catch (err) {
-    console.error("API error:", err);
+    console.error("API error", err);
     renderTable([]);
   }
+}
+
+function statusClass(status) {
+  if (status === "landed") return "status-landed";
+  if (status === "boarding") return "status-boarding";
+  if (status === "delayed") return "status-delayed";
+  return "status-on-time";
 }
 
 function renderTable(data) {
@@ -35,7 +47,7 @@ function renderTable(data) {
         <td>${f.time}</td>
         <td>${f.flight}</td>
         <td>${f.city}</td>
-        <td>${f.status}</td>
+        <td class="${statusClass(f.status)}">${f.status.toUpperCase()}</td>
       </tr>
     `;
     table.innerHTML += row;
@@ -46,9 +58,9 @@ function switchBoard() {
   const title = document.getElementById("boardTitle");
 
   if (showingDepartures) {
-    title.innerText = "ARRIVALS (LIVE LIN)";
+    title.innerText = "ARRIVALS – LINATE";
   } else {
-    title.innerText = "DEPARTURES (LIVE LIN)";
+    title.innerText = "DEPARTURES – LINATE";
   }
 
   showingDepartures = !showingDepartures;
@@ -57,8 +69,8 @@ function switchBoard() {
 // INIT
 fetchFlights();
 
-// refresh dati ogni 2 minuti
-setInterval(fetchFlights, 120000);
+// refresh dati ogni 90 sec (più stabile per free tier)
+setInterval(fetchFlights, 90000);
 
 // switch schermo ogni 20 sec
 setInterval(switchBoard, 20000);
