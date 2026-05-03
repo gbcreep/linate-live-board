@@ -1,18 +1,29 @@
-const departures = [
-  { time: "22:30", flight: "AZ2134", city: "Rome FCO", status: "ON TIME" },
-  { time: "22:45", flight: "U23891", city: "Paris CDG", status: "BOARDING" },
-  { time: "23:05", flight: "FR1452", city: "Catania", status: "DELAYED 15m" },
-  { time: "23:20", flight: "BA0571", city: "London LHR", status: "ON TIME" }
-];
+const API_KEY = "b59f0c36027454ecc59c3915c56a4188";
 
-const arrivals = [
-  { time: "22:40", flight: "AZ1177", city: "Naples", status: "LANDED" },
-  { time: "22:55", flight: "LH203", city: "Munich", status: "ON TIME" },
-  { time: "23:10", flight: "IB3142", city: "Madrid", status: "ON TIME" },
-  { time: "23:30", flight: "KL1601", city: "Amsterdam", status: "DELAYED" }
-];
+const ENDPOINT = `https://api.aviationstack.com/v1/flights?access_key=${API_KEY}&dep_iata=LIN&limit=10`;
 
 let showingDepartures = true;
+
+async function fetchFlights() {
+  try {
+    const res = await fetch(ENDPOINT);
+    const data = await res.json();
+
+    const flights = data.data || [];
+
+    const departures = flights.map(f => ({
+      time: f.departure?.scheduled?.substring(11, 16) || "--:--",
+      flight: f.flight?.iata || "N/A",
+      city: f.arrival?.airport || "Unknown",
+      status: f.flight_status?.toUpperCase() || "UNKNOWN"
+    }));
+
+    renderTable(departures);
+  } catch (err) {
+    console.error("API error:", err);
+    renderTable([]);
+  }
+}
 
 function renderTable(data) {
   const table = document.getElementById("flightTable");
@@ -35,18 +46,19 @@ function switchBoard() {
   const title = document.getElementById("boardTitle");
 
   if (showingDepartures) {
-    title.innerText = "ARRIVALS";
-    renderTable(arrivals);
+    title.innerText = "ARRIVALS (LIVE LIN)";
   } else {
-    title.innerText = "DEPARTURES";
-    renderTable(departures);
+    title.innerText = "DEPARTURES (LIVE LIN)";
   }
 
   showingDepartures = !showingDepartures;
 }
 
-// inizializza
-renderTable(departures);
+// INIT
+fetchFlights();
 
-// loop rotazione ogni 15 sec
-setInterval(switchBoard, 15000);
+// refresh dati ogni 2 minuti
+setInterval(fetchFlights, 120000);
+
+// switch schermo ogni 20 sec
+setInterval(switchBoard, 20000);
