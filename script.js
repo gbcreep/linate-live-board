@@ -1,9 +1,17 @@
-const API_KEY = "b59f0c36027454ecc59c3915c56a4188";
+const BASE = "https://api.aviationstack.com/v1/flights";
+const KEY = "INSERISCI_API_KEY";
 
-const ENDPOINT =
-  `https://api.aviationstack.com/v1/flights?access_key=${API_KEY}&dep_iata=LIN&limit=20`;
+async function fetchDepartures() {
+  const res = await fetch(`${BASE}?access_key=${KEY}&dep_iata=LIN&limit=10`);
+  const data = await res.json();
+  return data.data || [];
+}
 
-let showingDepartures = true;
+async function fetchArrivals() {
+  const res = await fetch(`${BASE}?access_key=${KEY}&arr_iata=LIN&limit=10`);
+  const data = await res.json();
+  return data.data || [];
+}
 
 function formatTime(dt) {
   if (!dt) return "--:--";
