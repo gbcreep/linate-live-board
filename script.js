@@ -39,7 +39,8 @@ async function fetchFlights() {
     const mapped = flights.map(f => ({
       time: formatTime(f.departure?.scheduled),
       flight: f.flight?.iata || "N/A",
-      city: f.arrival?.airport || "Unknown",
+      city: f.arrival?.city || "Unknown",
+      airport: f.arrival?.airport || "Unknown",
       status: normalizeStatus(f.flight_status)
     }));
 
